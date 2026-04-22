@@ -1,0 +1,45 @@
+{
+  "display_information": {
+    "name": "Breeze Customer Support",
+    "description": "Merchant support — tag me to reach a support agent.",
+    "background_color": "#0ea5e9"
+  },
+  "features": {
+    "bot_user": {
+      "display_name": "Breeze Customer Support",
+      "always_online": true
+    }
+  },
+  "oauth_config": {
+    "scopes": {
+      "bot": [
+        "app_mentions:read",
+        "channels:history",
+        "channels:read",
+        "chat:write",
+        "groups:history",
+        "groups:read",
+        "reactions:read",
+        "reactions:write",
+        "users:read"
+      ]
+    }
+  },
+  "settings": {
+    "event_subscriptions": {
+      "bot_events": [
+        "app_mention",
+        "message.channels",
+        "message.groups",
+        "reaction_added",
+        "app_home_opened"
+      ]
+    },
+    "interactivity": {
+      "is_enabled": false
+    },
+    "org_deploy_enabled": false,
+    "socket_mode_enabled": true,
+    "token_rotation_enabled": false
+  }
+}
