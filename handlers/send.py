@@ -1,5 +1,8 @@
 import html
+import io
+import os
 import threading
+import requests
 import ticket_store
 
 COUNTDOWN_SECONDS = 30
@@ -17,8 +20,13 @@ def handle_outbound_message(event: dict, client):
     ts = event["ts"]
     thread_ts = event.get("thread_ts")
     user = event.get("user")
+    files = event.get("files", [])
 
     if not thread_ts:
+        return
+
+    # Must have text or files to send
+    if not message and not files:
         return
 
     # Find the ticket for this ops thread
@@ -27,9 +35,6 @@ def handle_outbound_message(event: dict, client):
         return
 
     if ticket.get("resolved"):
-        return
-
-    if not message:
         return
 
     agent_name = _get_display_name(client, user)
@@ -45,17 +50,20 @@ def handle_outbound_message(event: dict, client):
         if not pending:
             return  # was cancelled
 
-        mirrored_text = f":speech_balloon: *{agent_name}* from Breeze Support:\n{message}"
+        # Send text message if present
+        if message:
+            mirrored_text = f":speech_balloon: *{agent_name}* from Breeze Support:\n{message}"
+            result = client.chat_postMessage(
+                channel=ticket["merchant_channel"],
+                thread_ts=ticket["merchant_thread_ts"],
+                text=mirrored_text,
+            )
+            pending["mirrored_ts"] = result["ts"]
+            pending["mirrored_channel"] = ticket["merchant_channel"]
 
-        result = client.chat_postMessage(
-            channel=ticket["merchant_channel"],
-            thread_ts=ticket["merchant_thread_ts"],
-            text=mirrored_text,
-        )
-
-        # Store mirrored_ts so 🗑️ can recall it
-        pending["mirrored_ts"] = result["ts"]
-        pending["mirrored_channel"] = ticket["merchant_channel"]
+        # Send files if present
+        for file in files:
+            _send_file_to_merchant(client, file, ticket["merchant_channel"], ticket["merchant_thread_ts"], agent_name)
 
         try:
             client.reactions_remove(channel=channel, name="hourglass_flowing_sand", timestamp=ts)
@@ -69,8 +77,35 @@ def handle_outbound_message(event: dict, client):
         "ops_channel": channel,
         "text": message,
         "agent_name": agent_name,
+        "files": files,
     })
     timer.start()
+
+
+def _send_file_to_merchant(client, file: dict, merchant_channel: str, merchant_thread_ts: str, agent_name: str):
+    url_private = file.get("url_private")
+    name = file.get("name", "file")
+    filetype = file.get("filetype", "")
+
+    if not url_private:
+        return
+
+    try:
+        token = os.environ["SLACK_BOT_TOKEN"]
+        resp = requests.get(url_private, headers={"Authorization": f"Bearer {token}"})
+        if resp.status_code != 200:
+            return
+
+        client.files_upload(
+            channels=merchant_channel,
+            thread_ts=merchant_thread_ts,
+            file=io.BytesIO(resp.content),
+            filename=name,
+            filetype=filetype,
+            initial_comment=f":speech_balloon: *{agent_name}* from Breeze Support:",
+        )
+    except Exception as e:
+        print(f"File send error: {e}")
 
 
 def _get_display_name(client, user: str) -> str:

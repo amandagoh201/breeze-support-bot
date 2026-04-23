@@ -36,14 +36,26 @@ def handle_thread_message(event: dict, client):
     # whether the message came from the ops channel — it didn't, so the sender is in
     # the merchant channel. We distinguish by checking if user is an internal member.
     label = _get_label(client, user, channel)
+    files = event.get("files", [])
 
-    mirror_text = f"{label} {text}"
+    # Mirror text if present
+    if text:
+        client.chat_postMessage(
+            channel=ticket["ops_channel"],
+            thread_ts=ticket["ops_thread_ts"],
+            text=f"{label} {text}",
+        )
 
-    client.chat_postMessage(
-        channel=ticket["ops_channel"],
-        thread_ts=ticket["ops_thread_ts"],
-        text=mirror_text,
-    )
+    # Mirror each file as a permalink
+    for file in files:
+        name = file.get("name", "file")
+        permalink = file.get("permalink", "")
+        if permalink:
+            client.chat_postMessage(
+                channel=ticket["ops_channel"],
+                thread_ts=ticket["ops_thread_ts"],
+                text=f"{label} shared a file: *{name}*\n{permalink}",
+            )
 
 
 def _get_label(client, user: str, channel: str) -> str:

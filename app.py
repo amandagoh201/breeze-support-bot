@@ -59,8 +59,9 @@ def on_mention(event, client, say):
 
 @app.event("message")
 def on_message(event, client):
-    # Ignore bot messages
-    if event.get("bot_id") or event.get("subtype"):
+    # Ignore bot messages and all subtypes except file_share
+    subtype = event.get("subtype")
+    if event.get("bot_id") or (subtype and subtype != "file_share"):
         return
 
     channel = event.get("channel")
