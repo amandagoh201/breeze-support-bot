@@ -96,16 +96,15 @@ def _send_file_to_merchant(client, file: dict, merchant_channel: str, merchant_t
         if resp.status_code != 200:
             return
 
-        client.files_upload(
-            channels=merchant_channel,
+        client.files_upload_v2(
+            channel=merchant_channel,
             thread_ts=merchant_thread_ts,
             file=io.BytesIO(resp.content),
             filename=name,
-            filetype=filetype,
             initial_comment=f":speech_balloon: *{agent_name}* from Breeze Support:",
         )
     except Exception as e:
-        print(f"File send error: {e}")
+        print(f"File send error: {type(e).__name__}: {e}")
 
 
 def _get_display_name(client, user: str) -> str:
