@@ -34,9 +34,6 @@ def handle_outbound_message(event: dict, client):
     if not ticket:
         return
 
-    if ticket.get("resolved"):
-        return
-
     agent_name = _get_display_name(client, user)
 
     # Add ⏳ to signal countdown
@@ -52,7 +49,7 @@ def handle_outbound_message(event: dict, client):
 
         # Send text message if present
         if message:
-            mirrored_text = f":speech_balloon: *{agent_name}* from Breeze Support:\n{message}"
+            mirrored_text = message
             result = client.chat_postMessage(
                 channel=ticket["merchant_channel"],
                 thread_ts=ticket["merchant_thread_ts"],
@@ -101,7 +98,7 @@ def _send_file_to_merchant(client, file: dict, merchant_channel: str, merchant_t
             thread_ts=merchant_thread_ts,
             file=io.BytesIO(resp.content),
             filename=name,
-            initial_comment=f":speech_balloon: *{agent_name}* from Breeze Support:",
+            initial_comment="",
         )
     except Exception as e:
         print(f"File send error: {type(e).__name__}: {e}")

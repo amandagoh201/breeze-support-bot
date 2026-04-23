@@ -27,7 +27,7 @@ def handle_mention(event: dict, client, say):
         f">*Channel:* <#{channel}>\n"
         f">*Message:* {text}\n"
         f">*Thread:* https://slack.com/archives/{channel}/p{thread_ts.replace('.', '')}\n\n"
-        f"_Reply here for internal discussion. Start a message with `send:` to reply to merchant. React :wastebasket: on a sent message to recall it. React :white_check_mark: on this header to resolve._"
+        f"_Reply here for internal discussion. Start a message with `send:` to reply to merchant. React :wastebasket: on a sent message to recall it._"
     )
 
     result = client.chat_postMessage(

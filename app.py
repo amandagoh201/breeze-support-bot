@@ -31,10 +31,9 @@ def on_mention(event, client, say):
                     "*Breeze Customer Support — Agent Commands*\n\n"
                     "`send: <message>` — sends your message to the merchant thread (30s countdown before sending)\n"
                     "React ❌ on a `send:` message — cancels the send during the countdown\n"
-                    "React ✅ on a ticket header in the ops channel — marks ticket as resolved and notifies the merchant\n\n"
+                    "React 🗑️ on a `send:` message after sending — recalls (deletes) it from the merchant thread\n\n"
                     "_Emojis added automatically by the bot:_\n"
-                    "⏳ countdown in progress  |  📬 message sent\n\n"
-                    "React 🗑️ on a `send:` message after sending — recalls (deletes) it from the merchant thread"
+                    "⏳ countdown in progress  |  📬 message sent"
                 ),
             )
         except Exception as e:
@@ -114,7 +113,7 @@ def on_app_home_opened(event, client):
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": "*For support agents*\nAll escalations land in the internal ops channel as a ticket thread. Use the following to manage each ticket:\n\n*Sending a reply to the merchant:*\nStart your message with `send:` in the ops thread — e.g. `send: your payout has been processed`\n• Bot adds ⏳ and starts a 30-second countdown before sending\n• React ❌ on the message during the countdown to cancel\n• Once sent, the message shows 📬\n• React 🗑️ on the message to recall (delete) it from the merchant thread\n\n*Resolving a ticket:*\nReact ✅ on the ticket header — merchant is notified automatically"
+                        "text": "*For support agents*\nAll escalations land in the internal ops channel as a ticket thread. Use the following to manage each ticket:\n\n*Sending a reply to the merchant:*\nStart your message with `send:` in the ops thread — e.g. `send: your payout has been processed`\n• Attach a file to your `send:` message to send files to the merchant\n• Bot adds ⏳ and starts a 30-second countdown before sending\n• React ❌ on the message during the countdown to cancel\n• Once sent, the message shows 📬\n• React 🗑️ on the message to recall (delete) it from the merchant thread"
                     }
                 },
                 {"type": "divider"},

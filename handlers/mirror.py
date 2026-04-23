@@ -27,8 +27,6 @@ def handle_thread_message(event: dict, client):
     ticket = ticket_store.get_ticket_by_merchant_thread(thread_ts)
     if not ticket:
         return
-    if ticket["resolved"]:
-        return
 
     # Determine if sender is merchant or agent
     # Agents are workspace members; merchants in shared channels appear as external users.

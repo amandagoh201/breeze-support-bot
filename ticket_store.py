@@ -25,7 +25,6 @@ def create_ticket(
             "merchant_thread_ts": merchant_thread_ts,
             "ops_channel": ops_channel,
             "ops_thread_ts": ops_thread_ts,
-            "resolved": False,
         }
         _ops_to_merchant[ops_thread_ts] = merchant_thread_ts
 
@@ -39,17 +38,6 @@ def get_ticket_by_ops_thread(ops_thread_ts: str) -> Optional[dict]:
     if merchant_ts:
         return _tickets.get(merchant_ts)
     return None
-
-
-def resolve_ticket(merchant_thread_ts: str):
-    with _lock:
-        if merchant_thread_ts in _tickets:
-            _tickets[merchant_thread_ts]["resolved"] = True
-
-
-def is_resolved(merchant_thread_ts: str) -> bool:
-    ticket = _tickets.get(merchant_thread_ts)
-    return ticket["resolved"] if ticket else False
 
 
 def add_pending_send(ops_message_ts: str, data: dict):

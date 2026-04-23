@@ -1,4 +1,3 @@
-import os
 import ticket_store
 
 
@@ -11,19 +10,11 @@ def handle_reaction_added(event: dict, client):
 
     channel = item["channel"]
     message_ts = item["ts"]
-    ops_channel = os.environ["OPS_CHANNEL_ID"]
 
     if reaction == "x":
         _handle_cancel(client, channel, message_ts)
     elif reaction == "wastebasket":
         _handle_recall(client, channel, message_ts)
-    elif reaction == "white_check_mark":
-        if channel == ops_channel:
-            # ✅ on ticket header in ops thread
-            _handle_resolve(client, channel, message_ts)
-        else:
-            # ✅ on original message in merchant channel
-            _handle_resolve_from_merchant_thread(client, channel, message_ts)
 
 
 # ---------------------------------------------------------------------------
@@ -64,93 +55,3 @@ def _handle_recall(client, channel: str, message_ts: str):
         print(f"Recall error: {e}")
 
     ticket_store.remove_pending_send(message_ts)
-
-
-# ---------------------------------------------------------------------------
-# ✅ Resolve from merchant thread (either party reacts on original message)
-# ---------------------------------------------------------------------------
-
-def _handle_resolve_from_merchant_thread(client, channel: str, message_ts: str):
-    ticket = ticket_store.get_ticket_by_merchant_thread(message_ts)
-    if not ticket:
-        return
-    if ticket["resolved"]:
-        return
-
-    ticket_store.resolve_ticket(message_ts)
-
-    # Notify merchant in their thread
-    client.chat_postMessage(
-        channel=ticket["merchant_channel"],
-        thread_ts=ticket["merchant_thread_ts"],
-        text="Your support request has been resolved. Thanks for reaching out to Breeze Customer Support! :white_check_mark: If you have further questions, feel free to tag @Breeze Customer Support in a new message.",
-    )
-
-    # Update ops thread
-    client.chat_postMessage(
-        channel=ticket["ops_channel"],
-        thread_ts=ticket["ops_thread_ts"],
-        text=":white_check_mark: *Ticket resolved* via merchant thread. Merchant has been notified.",
-    )
-
-    # Add ✅ to ticket header in ops
-    try:
-        client.reactions_add(
-            channel=ticket["ops_channel"],
-            name="white_check_mark",
-            timestamp=ticket["ops_thread_ts"],
-        )
-    except Exception:
-        pass
-
-    # Add ✅ to original merchant message
-    try:
-        client.reactions_add(
-            channel=ticket["merchant_channel"],
-            name="white_check_mark",
-            timestamp=ticket["merchant_thread_ts"],
-        )
-    except Exception:
-        pass
-
-
-# ---------------------------------------------------------------------------
-# ✅ Resolve (reacted on ticket header in ops thread)
-# ---------------------------------------------------------------------------
-
-def _handle_resolve(client, channel: str, message_ts: str):
-    ticket = ticket_store.get_ticket_by_ops_thread(message_ts)
-    if not ticket:
-        return
-    if ticket["resolved"]:
-        return
-
-    ticket_store.resolve_ticket(ticket["merchant_thread_ts"])
-
-    client.chat_postMessage(
-        channel=ticket["merchant_channel"],
-        thread_ts=ticket["merchant_thread_ts"],
-        text="Your support request has been resolved. Thanks for reaching out to Breeze Customer Support! :white_check_mark: If you have further questions, feel free to tag @Breeze Customer Support in a new message.",
-    )
-
-    client.chat_postMessage(
-        channel=ticket["ops_channel"],
-        thread_ts=ticket["ops_thread_ts"],
-        text=":white_check_mark: *Ticket resolved.* Merchant has been notified.",
-    )
-
-    # Add ✅ to ops ticket header
-    try:
-        client.reactions_add(channel=channel, name="white_check_mark", timestamp=message_ts)
-    except Exception:
-        pass
-
-    # Add ✅ to original merchant message
-    try:
-        client.reactions_add(
-            channel=ticket["merchant_channel"],
-            name="white_check_mark",
-            timestamp=ticket["merchant_thread_ts"],
-        )
-    except Exception:
-        pass
