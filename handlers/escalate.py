@@ -1,5 +1,6 @@
 import os
 import ticket_store
+import error_logger
 
 
 def handle_mention(event: dict, client, say):
@@ -30,16 +31,19 @@ def handle_mention(event: dict, client, say):
         f"_Reply here for internal discussion. Start a message with `send:` to reply to merchant. React :wastebasket: on a sent message to recall it._"
     )
 
-    result = client.chat_postMessage(
-        channel=OPS_CHANNEL,
-        text=ticket_text,
-        unfurl_links=False,
-    )
-    ops_thread_ts = result["ts"]
+    try:
+        result = client.chat_postMessage(
+            channel=OPS_CHANNEL,
+            text=ticket_text,
+            unfurl_links=False,
+        )
+        ops_thread_ts = result["ts"]
 
-    ticket_store.create_ticket(
-        merchant_channel=channel,
-        merchant_thread_ts=thread_ts,
-        ops_channel=OPS_CHANNEL,
-        ops_thread_ts=ops_thread_ts,
-    )
+        ticket_store.create_ticket(
+            merchant_channel=channel,
+            merchant_thread_ts=thread_ts,
+            ops_channel=OPS_CHANNEL,
+            ops_thread_ts=ops_thread_ts,
+        )
+    except Exception as e:
+        error_logger.log_error(client, "Escalation — failed to create ticket", e)

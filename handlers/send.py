@@ -4,6 +4,7 @@ import os
 import threading
 import requests
 import ticket_store
+import error_logger
 
 COUNTDOWN_SECONDS = 30
 
@@ -47,20 +48,22 @@ def handle_outbound_message(event: dict, client):
         if not pending:
             return  # was cancelled
 
-        # Send text message if present
-        if message:
-            mirrored_text = message
-            result = client.chat_postMessage(
-                channel=ticket["merchant_channel"],
-                thread_ts=ticket["merchant_thread_ts"],
-                text=mirrored_text,
-            )
-            pending["mirrored_ts"] = result["ts"]
-            pending["mirrored_channel"] = ticket["merchant_channel"]
+        try:
+            # Send text message if present
+            if message:
+                result = client.chat_postMessage(
+                    channel=ticket["merchant_channel"],
+                    thread_ts=ticket["merchant_thread_ts"],
+                    text=message,
+                )
+                pending["mirrored_ts"] = result["ts"]
+                pending["mirrored_channel"] = ticket["merchant_channel"]
 
-        # Send files if present
-        for file in files:
-            _send_file_to_merchant(client, file, ticket["merchant_channel"], ticket["merchant_thread_ts"], agent_name)
+            # Send files if present
+            for file in files:
+                _send_file_to_merchant(client, file, ticket["merchant_channel"], ticket["merchant_thread_ts"], agent_name)
+        except Exception as e:
+            error_logger.log_error(client, "Send — failed to send message to merchant", e)
 
         try:
             client.reactions_remove(channel=channel, name="hourglass_flowing_sand", timestamp=ts)

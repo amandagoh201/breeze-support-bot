@@ -1,4 +1,5 @@
 import ticket_store
+import error_logger
 
 
 def handle_reaction_added(event: dict, client):
@@ -52,6 +53,6 @@ def _handle_recall(client, channel: str, message_ts: str):
         client.reactions_remove(channel=channel, name="mailbox_with_mail", timestamp=message_ts)
         client.reactions_add(channel=channel, name="wastebasket", timestamp=message_ts)
     except Exception as e:
-        print(f"Recall error: {e}")
+        error_logger.log_error(client, "Recall — failed to delete message from merchant thread", e)
 
     ticket_store.remove_pending_send(message_ts)

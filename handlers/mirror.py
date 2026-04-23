@@ -1,5 +1,6 @@
 import os
 import ticket_store
+import error_logger
 
 BOT_USER_ID = None  # set at startup from app.py
 
@@ -36,24 +37,27 @@ def handle_thread_message(event: dict, client):
     label = _get_label(client, user, channel)
     files = event.get("files", [])
 
-    # Mirror text if present
-    if text:
-        client.chat_postMessage(
-            channel=ticket["ops_channel"],
-            thread_ts=ticket["ops_thread_ts"],
-            text=f"{label} {text}",
-        )
-
-    # Mirror each file as a permalink
-    for file in files:
-        name = file.get("name", "file")
-        permalink = file.get("permalink", "")
-        if permalink:
+    try:
+        # Mirror text if present
+        if text:
             client.chat_postMessage(
                 channel=ticket["ops_channel"],
                 thread_ts=ticket["ops_thread_ts"],
-                text=f"{label} shared a file: *{name}*\n{permalink}",
+                text=f"{label} {text}",
             )
+
+        # Mirror each file as a permalink
+        for file in files:
+            name = file.get("name", "file")
+            permalink = file.get("permalink", "")
+            if permalink:
+                client.chat_postMessage(
+                    channel=ticket["ops_channel"],
+                    thread_ts=ticket["ops_thread_ts"],
+                    text=f"{label} shared a file: *{name}*\n{permalink}",
+                )
+    except Exception as e:
+        error_logger.log_error(client, "Mirror — failed to mirror message to ops", e)
 
 
 def _get_label(client, user: str, channel: str) -> str:
