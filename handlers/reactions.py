@@ -103,6 +103,16 @@ def _handle_resolve_from_merchant_thread(client, channel: str, message_ts: str):
     except Exception:
         pass
 
+    # Add ✅ to original merchant message
+    try:
+        client.reactions_add(
+            channel=ticket["merchant_channel"],
+            name="white_check_mark",
+            timestamp=ticket["merchant_thread_ts"],
+        )
+    except Exception:
+        pass
+
 
 # ---------------------------------------------------------------------------
 # ✅ Resolve (reacted on ticket header in ops thread)
@@ -129,7 +139,18 @@ def _handle_resolve(client, channel: str, message_ts: str):
         text=":white_check_mark: *Ticket resolved.* Merchant has been notified.",
     )
 
+    # Add ✅ to ops ticket header
     try:
         client.reactions_add(channel=channel, name="white_check_mark", timestamp=message_ts)
+    except Exception:
+        pass
+
+    # Add ✅ to original merchant message
+    try:
+        client.reactions_add(
+            channel=ticket["merchant_channel"],
+            name="white_check_mark",
+            timestamp=ticket["merchant_thread_ts"],
+        )
     except Exception:
         pass
