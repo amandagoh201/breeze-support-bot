@@ -63,7 +63,12 @@ def handle_outbound_message(event: dict, client):
             for file in files:
                 _send_file_to_merchant(client, file, ticket["merchant_channel"], ticket["merchant_thread_ts"], agent_name)
         except Exception as e:
-            error_logger.log_error(client, "Send — failed to send message to merchant", e)
+            error_logger.log_error(client, "Send — failed to send message to merchant", e, extra={
+                "merchant_channel": ticket["merchant_channel"],
+                "ops_channel": ticket["ops_channel"],
+                "ops_thread_ts": ticket["ops_thread_ts"],
+                "message": message,
+            })
 
         try:
             client.reactions_remove(channel=channel, name="hourglass_flowing_sand", timestamp=ts)
@@ -104,7 +109,10 @@ def _send_file_to_merchant(client, file: dict, merchant_channel: str, merchant_t
             initial_comment="",
         )
     except Exception as e:
-        print(f"File send error: {type(e).__name__}: {e}")
+        error_logger.log_error(client, "Send — failed to send file to merchant", e, extra={
+            "merchant_channel": merchant_channel,
+            "message": name,
+        })
 
 
 def _get_display_name(client, user: str) -> str:

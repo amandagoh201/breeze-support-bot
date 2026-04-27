@@ -46,4 +46,7 @@ def handle_mention(event: dict, client, say):
             ops_thread_ts=ops_thread_ts,
         )
     except Exception as e:
-        error_logger.log_error(client, "Escalation — failed to create ticket", e)
+        error_logger.log_error(client, "Escalation — failed to create ticket", e, extra={
+            "merchant_channel": channel,
+            "message": text,
+        })
