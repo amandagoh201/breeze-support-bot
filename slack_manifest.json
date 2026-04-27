@@ -1,12 +1,12 @@
 {
   "display_information": {
-    "name": "Breeze Customer Support",
+    "name": "Agent Breeze",
     "description": "Merchant support — tag me to reach a support agent.",
     "background_color": "#0ea5e9"
   },
   "features": {
     "bot_user": {
-      "display_name": "Breeze Customer Support",
+      "display_name": "Agent Breeze",
       "always_online": true
     }
   },
